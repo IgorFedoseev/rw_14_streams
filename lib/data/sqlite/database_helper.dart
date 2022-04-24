@@ -57,7 +57,7 @@ class DatabaseHelper {
   }
 
   Future<Database> get database async{
-    final database = _database;
+    var database = _database;
     if(database != null) return database;
     // Use this object to prevent concurrent access to data
     await lock.synchronized(() async {
@@ -70,5 +70,9 @@ class DatabaseHelper {
     return _database!;
   }
 
-// TODO: Add getter for streamDatabase
+  Future<BriteDatabase> get streamDatabase async{
+    await database;
+    return _streamDatabase;
+  }
+// TODO: Add parseRecipes here
 }
