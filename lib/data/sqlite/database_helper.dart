@@ -50,7 +50,7 @@ class DatabaseHelper {
     final documentDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentDirectory.path, _databaseName);
 
-    // TODO: Remember to turn off debugging, before deploying app to store(s).
+    // TODO: Remember to turn offf debugging, before deploying app to store(s).
     Sqflite.setDebugModeOn(true);
 
     return openDatabase(path, version: _databaseVersion, onCreate: _onCreate);
