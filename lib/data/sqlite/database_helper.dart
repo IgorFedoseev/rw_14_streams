@@ -4,6 +4,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:sqlbrite/sqlbrite.dart';
 import 'package:synchronized/synchronized.dart';
 
+import '../models/models.dart';
+
 class DatabaseHelper {
   static const _databaseName = 'MyRecipes.db';
   static const _databaseVersion = 1;
@@ -15,8 +17,8 @@ class DatabaseHelper {
 
   static late BriteDatabase _streamDatabase;
 
-  DatabaseHelper._privatConstructor();
-  static final DatabaseHelper instance = DatabaseHelper._privatConstructor();
+  DatabaseHelper._privateConstructor();
+  static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
 
   static var lock = Lock();
 
@@ -50,19 +52,19 @@ class DatabaseHelper {
     final documentDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentDirectory.path, _databaseName);
 
-    // TODO: Remember to turn offf debugging, before deploying app to store(s).
+    // TODO: Remember to turn off debugging, before deploying app to store(s).
     Sqflite.setDebugModeOn(true);
 
     return openDatabase(path, version: _databaseVersion, onCreate: _onCreate);
   }
 
-  Future<Database> get database async{
+  Future<Database> get database async {
     var database = _database;
-    if(database != null) return database;
+    if (database != null) return database;
     // Use this object to prevent concurrent access to data
     await lock.synchronized(() async {
       // lazily instantiate the db the first time it is accessed
-      if(_database == null) {
+      if (_database == null) {
         _database = await _initDatabase();
         _streamDatabase = BriteDatabase(_database!);
       }
@@ -70,9 +72,46 @@ class DatabaseHelper {
     return _database!;
   }
 
-  Future<BriteDatabase> get streamDatabase async{
+  Future<BriteDatabase> get streamDatabase async {
     await database;
     return _streamDatabase;
   }
-// TODO: Add parseRecipes here
+
+  List<Recipe> parseRecipes(List<Map<String, dynamic>> recipeList) {
+    final recipes = <Recipe>[];
+    recipeList.forEach((recipeMap) {
+      final recipe = Recipe.fromJson(recipeMap);
+      recipes.add(recipe);
+    });
+    return recipes;
+  }
+
+  List<Ingredient> parseIngredients(List<Map<String, dynamic>> ingredientList) {
+    final ingredients = <Ingredient>[];
+    ingredientList.forEach((ingredientMap) {
+      final ingredient = Ingredient.fromJson(ingredientMap);
+      ingredients.add(ingredient);
+    });
+    return ingredients;
+  }
+
+  Future<List<Recipe>> findAllRecipes() async {
+    final db = await instance.streamDatabase;
+    final recipeList = await db.query(recipeTable);
+    final recipes = parseRecipes(recipeList);
+    return recipes;
+  }
+
+  Stream<List<Recipe>> watchAllRecipes() async* {
+    final db = await instance.streamDatabase;
+    yield* db.createQuery(recipeTable).mapToList((row) => Recipe.fromJson(row));
+  }
+
+  Stream<List<Ingredient>> watchAllIngredients() async* {
+    final db = await instance.streamDatabase;
+    yield* db
+        .createQuery(ingredientTable)
+        .mapToList((row) => Ingredient.fromJson(row));
+  }
+// TODO: Add findRecipeByID() here
 }
