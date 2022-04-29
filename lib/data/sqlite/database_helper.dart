@@ -113,5 +113,78 @@ class DatabaseHelper {
         .createQuery(ingredientTable)
         .mapToList((row) => Ingredient.fromJson(row));
   }
-// TODO: Add findRecipeByID() here
+
+  Future<Recipe> findRecipeById(int id) async {
+    final db = await instance.streamDatabase;
+    final recipeList = await db.query(recipeTable, where: 'id = $id');
+    final recipes = parseRecipes(recipeList);
+    return recipes.first;
+  }
+
+  Future<List<Ingredient>> findAllIngredients() async {
+    final db = await instance.streamDatabase;
+    final ingredientList = await db.query(ingredientTable);
+    final ingredients = parseIngredients(ingredientList);
+    return ingredients;
+  }
+
+  Future<List<Ingredient>> findRecipeIngredients(int recipeId) async {
+    final db = await instance.streamDatabase;
+    final ingredientList =
+        await db.query(ingredientTable, where: 'recipeId = $recipeId');
+    final ingredients = parseIngredients(ingredientList);
+    return ingredients;
+  }
+
+  Future<int> insert(String table, Map<String, dynamic> row) async{
+    final db = await instance.streamDatabase;
+    return db.insert(table, row);
+  }
+
+  Future<int> insertRecipe(Recipe recipe){
+    return insert(recipeTable, recipe.toJson());
+  }
+
+  Future<int> insertIngredient(Ingredient ingredient){
+    return insert(ingredientTable, ingredient.toJson());
+  }
+
+  Future<int> _delete(String table, String columnId, int id) async{
+    final db = await instance.streamDatabase;
+    return db.delete(table, where: '$columnId = ?', whereArgs: [id]);
+  }
+
+  Future<int> deleteRecipe(Recipe recipe) async{
+    if (recipe.id != null){
+      return _delete(recipeTable, recipeId, recipe.id!);
+    } else {
+      return Future.value(-1);
+    }
+  }
+
+  Future<int> deleteIngredient(Ingredient ingredient) async{
+    if(ingredient.id != null){
+      return _delete(ingredientTable, ingredientId, ingredient.id!);
+    } else {
+      return Future.value(-1);
+    }
+  }
+
+  Future<void> deleteIngredients(List<Ingredient> ingredients){
+    ingredients.forEach((ingredient){
+      if(ingredient.id != null){
+        _delete(ingredientTable, ingredientId, ingredient.id!);
+      }
+    });
+    return Future.value();
+  }
+
+  Future<int> deleteRecipeIngredients(int id) async{
+    final db = await instance.streamDatabase;
+    return db.delete(ingredientTable, where: '$recipeId = ?', whereArgs: [id]);
+  }
+
+  void close(){
+    _streamDatabase.close();
+  }
 }
