@@ -1,6 +1,5 @@
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:sqlbrite/sqlbrite.dart';
 import 'package:synchronized/synchronized.dart';
 
@@ -59,7 +58,7 @@ class DatabaseHelper {
   }
 
   Future<Database> get database async {
-    var database = _database;
+    final database = _database;
     if (database != null) return database;
     // Use this object to prevent concurrent access to data
     await lock.synchronized(() async {
