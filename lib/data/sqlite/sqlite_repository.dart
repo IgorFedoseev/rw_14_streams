@@ -106,5 +106,4 @@ class SqliteRepository extends Repository {
     dbHelper.close();
   }
 
-
 }
